@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "npx prisma generate && npx prisma migrate deploy && node src/server.js",
+    "start": "node src/server.js",
+    "vercel-build": "npx prisma generate",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "node prisma/seed.js",
     "db:studio": "npx prisma studio",
