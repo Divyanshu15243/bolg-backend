@@ -1,5 +1,4 @@
 const { PrismaClient } = require("@prisma/client");
-const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
 const { paginate } = require("../utils/helpers");
@@ -22,22 +21,9 @@ exports.getAll = async (req, res) => {
 exports.upload = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-    const { filename, originalname, mimetype, size, path: filePath } = req.file;
-    let width, height;
-    if (mimetype.startsWith("image/") && !mimetype.includes("svg")) {
-      const metadata = await sharp(filePath).metadata();
-      width = metadata.width;
-      height = metadata.height;
-      if (width > 1920) {
-        await sharp(filePath).resize(1920, null, { withoutEnlargement: true }).toFile(filePath + "_resized");
-        fs.renameSync(filePath + "_resized", filePath);
-        const newMeta = await sharp(filePath).metadata();
-        width = newMeta.width;
-        height = newMeta.height;
-      }
-    }
+    const { filename, originalname, mimetype, size } = req.file;
     const url = `/uploads/${filename}`;
-    const media = await prisma.media.create({ data: { filename, originalName: originalname, mimeType: mimetype, size, url, width, height, uploadedById: req.user.id } });
+    const media = await prisma.media.create({ data: { filename, originalName: originalname, mimeType: mimetype, size, url, uploadedById: req.user.id } });
     res.status(201).json({ media });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
