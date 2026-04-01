@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  super_admin
+  admin
+  editor
+  writer
+}
+
+enum BlogStatus {
+  draft
+  published
+  scheduled
+}
+
+model Site {
+  id          String   @id @default(uuid())
+  name        String
+  domain      String   @unique
+  apiKey      String   @unique @default(uuid()) @map("api_key")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  blogs      Blog[]
+  categories Category[]
+
+  @@map("sites")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  bio       String?
+  role      Role     @default(writer)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  blogs    Blog[]
+  comments Comment[]
+  media    Media[]
+
+  @@map("users")
+}
+
+model Category {
+  id              String  @id @default(uuid())
+  name            String
+  slug            String
+  siteId          String  @map("site_id")
+  site            Site    @relation(fields: [siteId], references: [id])
+  description     String?
+  image           String?
+  metaTitle       String? @map("meta_title")
+  metaDescription String? @map("meta_description")
+  isActive        Boolean @default(true) @map("is_active")
+  sortOrder       Int     @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  blogs Blog[]
+
+  @@unique([slug, siteId])
+  @@unique([name, siteId])
+  @@map("categories")
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  blogs BlogTag[]
+
+  @@map("tags")
+}
+
+model Blog {
+  id               String     @id @default(uuid())
+  title            String
+  slug             String     @unique
+  excerpt          String?
+  content          String
+  featuredImage    String?    @map("featured_image")
+  status           BlogStatus @default(draft)
+  publishedAt      DateTime?  @map("published_at")
+  scheduledAt      DateTime?  @map("scheduled_at")
+  isFeatured       Boolean    @default(false) @map("is_featured")
+  showOnHomepage   Boolean    @default(false) @map("show_on_homepage")
+  readingTime      Int?       @map("reading_time")
+  views            Int        @default(0)
+  metaTitle        String?    @map("meta_title")
+  metaDescription  String?    @map("meta_description")
+  metaKeywords     String?    @map("meta_keywords")
+  canonicalUrl     String?    @map("canonical_url")
+  ogTitle          String?    @map("og_title")
+  ogDescription    String?    @map("og_description")
+  ogImage          String?    @map("og_image")
+  schemaType       String?    @map("schema_type")
+  seoScore         Int        @default(0) @map("seo_score")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  authorId   String   @map("author_id")
+  author     User     @relation(fields: [authorId], references: [id])
+  categoryId String   @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id])
+  siteId     String   @map("site_id")
+  site       Site     @relation(fields: [siteId], references: [id])
+
+  tags     BlogTag[]
+  comments Comment[]
+
+  @@map("blogs")
+}
+
+model BlogTag {
+  blogId String @map("blog_id")
+  tagId  String @map("tag_id")
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@map("blog_tags")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  authorName String  @map("author_name")
+  authorEmail String @map("author_email")
+  isApproved Boolean @default(false) @map("is_approved")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  blogId String @map("blog_id")
+  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@map("comments")
+}
+
+model Media {
+  id        String   @id @default(uuid())
+  filename  String
+  originalName String @map("original_name")
+  mimeType  String   @map("mime_type")
+  size      Int
+  url       String
+  altText   String?  @map("alt_text")
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  uploadedById String @map("uploaded_by_id")
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+
+  @@map("media")
+}
+
+model SeoSettings {
+  id                String  @id @default(uuid())
+  siteName          String  @default("Blog CMS") @map("site_name")
+  titleFormat       String  @default("%title% | %sitename%") @map("title_format")
+  defaultDescription String? @map("default_description")
+  robotsTxt         String? @map("robots_txt")
+  enableSitemap     Boolean @default(true) @map("enable_sitemap")
+  defaultOgImage    String? @map("default_og_image")
+  schemaDefaults    Json?   @map("schema_defaults")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("seo_settings")
+}

@@ -1,0 +1,13 @@
+const router = require("express").Router();
+const c = require("../controllers/blogController");
+const { authenticate, authorize } = require("../middleware/auth");
+router.get("/public", c.getPublished);
+router.get("/featured", c.getFeatured);
+router.get("/public/:slug", c.getBySlug);
+router.get("/related/:slug", c.getRelated);
+router.get("/", authenticate, c.getAll);
+router.post("/", authenticate, authorize("writer"), c.create);
+router.put("/:id", authenticate, authorize("writer"), c.update);
+router.delete("/:id", authenticate, authorize("editor"), c.remove);
+router.post("/bulk", authenticate, authorize("editor"), c.bulkAction);
+module.exports = router;
