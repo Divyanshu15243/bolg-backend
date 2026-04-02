@@ -42,8 +42,8 @@ exports.remove = async (req, res) => {
 
 exports.regenerateKey = async (req, res) => {
   try {
-    const { v4: uuidv4 } = require("uuid");
-    const site = await prisma.site.update({ where: { id: req.params.id }, data: { apiKey: uuidv4() } });
+    const { randomUUID } = require("crypto");
+    const site = await prisma.site.update({ where: { id: req.params.id }, data: { apiKey: randomUUID() } });
     res.json({ site });
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
