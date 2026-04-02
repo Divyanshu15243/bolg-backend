@@ -19,6 +19,7 @@ const siteRoutes = require("./routes/sites");
 
 const app = express();
 
+app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: (origin, cb) => cb(null, true), credentials: true }));
 app.use(express.json({ limit: "10mb" }));
