@@ -61,13 +61,13 @@ exports.getBySlug = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { title, content, excerpt, categoryId, tagIds = [], featuredImage, status, scheduledAt, isFeatured, showOnHomepage, metaTitle, metaDescription, metaKeywords, canonicalUrl, ogTitle, ogDescription, ogImage, schemaType, siteId } = req.body;
+    const { title, content, excerpt, titleFr, contentFr, excerptFr, categoryId, tagIds = [], featuredImage, status, scheduledAt, isFeatured, showOnHomepage, metaTitle, metaDescription, metaKeywords, canonicalUrl, ogTitle, ogDescription, ogImage, schemaType, siteId } = req.body;
     if (!siteId) return res.status(400).json({ error: "siteId is required" });
     const slug = generateSlug(title);
     const existingSlug = await prisma.blog.findUnique({ where: { slug } });
     const finalSlug = existingSlug ? `${slug}-${Date.now()}` : slug;
     const readingTime = calculateReadingTime(content);
-    const blogData = { title, slug: finalSlug, excerpt, content, featuredImage, status: status || "draft", publishedAt: status === "published" ? new Date() : null, scheduledAt: scheduledAt ? new Date(scheduledAt) : null, isFeatured: isFeatured || false, showOnHomepage: showOnHomepage || false, readingTime, metaTitle, metaDescription, metaKeywords, canonicalUrl, ogTitle, ogDescription, ogImage, schemaType, authorId: req.user.id, categoryId, siteId };
+    const blogData = { title, slug: finalSlug, excerpt, content, titleFr, contentFr, excerptFr, featuredImage, status: status || "draft", publishedAt: status === "published" ? new Date() : null, scheduledAt: scheduledAt ? new Date(scheduledAt) : null, isFeatured: isFeatured || false, showOnHomepage: showOnHomepage || false, readingTime, metaTitle, metaDescription, metaKeywords, canonicalUrl, ogTitle, ogDescription, ogImage, schemaType, authorId: req.user.id, categoryId, siteId };
     blogData.seoScore = calculateSeoScore(blogData);
     const blog = await prisma.blog.create({ data: blogData, include: { author: { select: { id: true, name: true, avatar: true } }, category: { select: { id: true, name: true, slug: true } } } });
     if (tagIds.length) await prisma.blogTag.createMany({ data: tagIds.map((tagId) => ({ blogId: blog.id, tagId })) });
