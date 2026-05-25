@@ -94,6 +94,9 @@ model Blog {
   slug             String     @unique
   excerpt          String?
   content          String
+  contentFr        String?   @map("content_fr")
+  titleFr          String?   @map("title_fr")
+  excerptFr        String?   @map("excerpt_fr")
   featuredImage    String?    @map("featured_image")
   status           BlogStatus @default(draft)
   publishedAt      DateTime?  @map("published_at")
